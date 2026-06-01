@@ -9,8 +9,11 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies (include devDependencies for build tools like vite)
-RUN npm install --include=dev
+# Install ALL dependencies including devDependencies (vite, etc.)
+# Force NODE_ENV=development during install so devDependencies are not skipped
+ENV NODE_ENV=development
+RUN npm install --include=dev --no-audit --no-fund \
+    && ls node_modules/.bin/vite
 
 # Copy source code
 COPY . .
@@ -23,8 +26,8 @@ ARG VITE_SUPABASE_PUBLISHABLE_KEY
 ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
 ENV VITE_SUPABASE_PUBLISHABLE_KEY=$VITE_SUPABASE_PUBLISHABLE_KEY
 
-# Build the application
-RUN npm run build
+# Build the application using the local vite binary directly
+RUN ./node_modules/.bin/vite build
 
 # Stage 2: Production
 FROM nginx:alpine AS production
