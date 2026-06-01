@@ -6,13 +6,15 @@ FROM oven/bun:1-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files and Bun lockfiles
-COPY package.json bun.lock bun.lockb ./
+# Copy package manifest and any available lockfiles (bun + npm fallback)
+COPY package.json ./
+COPY bun.lock* bun.lockb* package-lock.json* ./
 
 # Install ALL dependencies including devDependencies (vite, etc.) using Bun.
-# This avoids the npm CLI install crash seen on the Rocky Linux Docker host.
+# --verbose surfaces slow steps; drop --frozen-lockfile so it doesn't fail if
+# the lockfile didn't COPY in for any reason.
 ENV NODE_ENV=development
-RUN bun install --frozen-lockfile \
+RUN time bun install --verbose \
     && test -x node_modules/.bin/vite
 
 # Copy source code
