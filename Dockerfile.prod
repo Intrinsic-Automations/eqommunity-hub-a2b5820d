@@ -8,10 +8,9 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-COPY bun.lockb ./
 
-# Install dependencies
-RUN npm ci
+# Install dependencies (include devDependencies for build tools like vite)
+RUN npm install --include=dev
 
 # Copy source code
 COPY . .
