@@ -2,18 +2,18 @@
 # Multi-stage build for optimized image size
 
 # Stage 1: Build
-FROM node:20-alpine AS builder
+FROM oven/bun:1-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy package files and Bun lockfiles
+COPY package.json bun.lock bun.lockb ./
 
-# Install ALL dependencies including devDependencies (vite, etc.)
-# Force NODE_ENV=development during install so devDependencies are not skipped
+# Install ALL dependencies including devDependencies (vite, etc.) using Bun.
+# This avoids the npm CLI install crash seen on the Rocky Linux Docker host.
 ENV NODE_ENV=development
-RUN npm install --include=dev --no-audit --no-fund \
-    && ls node_modules/.bin/vite
+RUN bun install --frozen-lockfile \
+    && test -x node_modules/.bin/vite
 
 # Copy source code
 COPY . .
@@ -27,7 +27,7 @@ ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
 ENV VITE_SUPABASE_PUBLISHABLE_KEY=$VITE_SUPABASE_PUBLISHABLE_KEY
 
 # Build the application using the local vite binary directly
-RUN ./node_modules/.bin/vite build
+RUN bunx vite build
 
 # Stage 2: Production
 FROM nginx:alpine AS production
