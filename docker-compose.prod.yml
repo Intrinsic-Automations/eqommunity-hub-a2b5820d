@@ -1,5 +1,5 @@
 services:
-  # Frontend Application (Production Build)
+  # Frontend Application (Production Build) — host port 80
   frontend:
     build:
       context: .
