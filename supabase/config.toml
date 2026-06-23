@@ -1,4 +1,1 @@
 project_id = "janwnxaotmkqqdjmsbjf"
-
-[functions.generate-recovery-link]
-verify_jwt = false
