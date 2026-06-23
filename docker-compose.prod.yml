@@ -93,7 +93,7 @@ services:
   # safe ONLY because traffic to the upstream stays inside the corporate
   # network. Remove this service once the upstream cert is renewed.
   smtp-relay:
-    image: boky/postfix:v4.3.1
+    image: boky/postfix:v4.4.0-alpine
     environment:
       # Upstream corporate relay (host:port)
       RELAYHOST: "[${SMTP_UPSTREAM_HOST:-172.16.22.12}]:${SMTP_UPSTREAM_PORT:-25}"
