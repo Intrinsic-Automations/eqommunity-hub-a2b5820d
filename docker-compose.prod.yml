@@ -59,8 +59,15 @@ services:
       GOTRUE_EXTERNAL_EMAIL_ENABLED: ${ENABLE_EMAIL_SIGNUP:-true}
       GOTRUE_MAILER_AUTOCONFIRM: ${ENABLE_EMAIL_AUTOCONFIRM:-true}
       # SMTP / password recovery
-      GOTRUE_SMTP_HOST: ${GOTRUE_SMTP_HOST:-}
-      GOTRUE_SMTP_PORT: ${GOTRUE_SMTP_PORT:-25}
+      # NOTE: We route through the local smtp-relay sidecar (Postfix) instead of
+      # talking to the corporate relay directly. The corporate relay advertises
+      # STARTTLS with an expired certificate, which Go's crypto/tls rejects.
+      # The sidecar accepts plaintext on the internal Docker network and
+      # forwards to the upstream relay with TLS disabled. Once the upstream
+      # certificate is renewed, point GOTRUE_SMTP_HOST back at the upstream and
+      # remove the smtp-relay service.
+      GOTRUE_SMTP_HOST: smtp-relay
+      GOTRUE_SMTP_PORT: 587
       GOTRUE_SMTP_USER: ${GOTRUE_SMTP_USER:-}
       GOTRUE_SMTP_PASS: ${GOTRUE_SMTP_PASS:-}
       GOTRUE_SMTP_ADMIN_EMAIL: ${GOTRUE_SMTP_ADMIN_EMAIL:-}
@@ -72,9 +79,37 @@ services:
     depends_on:
       supabase-db:
         condition: service_healthy
+      smtp-relay:
+        condition: service_started
     networks:
       - app-network
     restart: unless-stopped
+
+  # Local SMTP relay sidecar (Postfix)
+  # Accepts plaintext SMTP from GoTrue on the internal Docker network and
+  # forwards mail to the corporate relay defined by SMTP_UPSTREAM_HOST.
+  # TLS to the upstream is disabled (smtp_tls_security_level=none) so the
+  # expired certificate on the upstream relay is never evaluated. This is
+  # safe ONLY because traffic to the upstream stays inside the corporate
+  # network. Remove this service once the upstream cert is renewed.
+  smtp-relay:
+    image: boky/postfix:v4.3.1
+    environment:
+      # Upstream corporate relay (host:port)
+      RELAYHOST: "[${SMTP_UPSTREAM_HOST:-172.16.22.12}]:${SMTP_UPSTREAM_PORT:-25}"
+      # Domains GoTrue is allowed to send FROM. Comma-separated.
+      ALLOWED_SENDER_DOMAINS: "${SMTP_ALLOWED_SENDER_DOMAINS:-technologic.com}"
+      # Disable STARTTLS to the upstream — bypasses the expired cert.
+      POSTFIX_smtp_tls_security_level: "none"
+      POSTFIX_smtp_use_tls: "no"
+      # Accept plaintext from GoTrue on 587 inside the Docker network only.
+      POSTFIX_smtpd_tls_security_level: "none"
+      # Quiet hostname for the HELO banner.
+      HOSTNAME: "eqhub-smtp-relay"
+    networks:
+      - app-network
+    restart: unless-stopped
+
 
   # Supabase REST API (PostgREST)
   supabase-rest:
