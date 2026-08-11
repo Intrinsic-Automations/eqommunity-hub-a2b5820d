@@ -50,8 +50,24 @@ serve(async (req) => {
     }
 
     // properties.action_link is the recovery URL the user should follow.
+    // GoTrue builds it from the INTERNAL API URL (e.g. http://supabase-kong:8000),
+    // which browsers can't resolve. Rewrite the origin to the public URL.
+    let link = data.properties?.action_link ?? data.properties?.hashed_token ?? "";
+    const publicApiUrl = Deno.env.get("API_EXTERNAL_URL") ?? Deno.env.get("PUBLIC_SUPABASE_URL");
+    if (link && publicApiUrl) {
+      try {
+        const linkUrl = new URL(link);
+        const pub = new URL(publicApiUrl);
+        linkUrl.protocol = pub.protocol;
+        linkUrl.host = pub.host;
+        link = linkUrl.toString();
+      } catch (_) {
+        // leave link as-is if URL parsing fails
+      }
+    }
+
     return new Response(
-      JSON.stringify({ link: data.properties?.action_link ?? data.properties?.href }),
+      JSON.stringify({ link }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
