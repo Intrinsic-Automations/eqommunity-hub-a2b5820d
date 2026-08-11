@@ -32,8 +32,9 @@ serve(async (req) => {
 
     // Generate a recovery link without sending an email. The client
     // will present the link directly so the user can reset their password.
+    const siteUrl = Deno.env.get("SITE_URL") ?? new URL(req.url).origin;
     const redirectTo = new URL(req.url).searchParams.get("redirect_to") ||
-      `${new URL(req.url).origin}/reset-password`;
+      `${siteUrl.replace(/\/$/, "")}/reset-password`;
 
     const { data, error } = await supabase.auth.admin.generateLink({
       type: "recovery",
