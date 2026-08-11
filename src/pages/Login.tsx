@@ -58,21 +58,27 @@ export default function Login() {
     e.preventDefault();
     setForgotLoading(true);
 
-    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
-      redirectTo: `${window.location.origin}/reset-password`,
+    const { data, error } = await supabase.functions.invoke("generate-recovery-link", {
+      body: { email: forgotEmail },
     });
 
-    if (error) {
+    if (error || data?.error) {
       toast({
         title: "Request failed",
-        description: error.message,
+        description: data?.error || error.message,
         variant: "destructive",
       });
-    } else {
-      setForgotSent(true);
+    } else if (data?.link) {
+      setResetLink(data.link);
       toast({
-        title: "Check your email",
-        description: "If an account exists for that address, a reset link has been sent.",
+        title: "Reset link ready",
+        description: "Click the link in the dialog to reset your password.",
+      });
+    } else {
+      toast({
+        title: "Request failed",
+        description: "Unable to generate a reset link.",
+        variant: "destructive",
       });
     }
 
@@ -80,7 +86,7 @@ export default function Login() {
   };
 
   const openForgot = () => {
-    setForgotSent(false);
+    setResetLink(null);
     setForgotEmail("");
     setForgotOpen(true);
   };
