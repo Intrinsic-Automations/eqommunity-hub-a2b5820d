@@ -6,7 +6,7 @@ export default function ProjectExecution() {
   return (
     <MethodPage
       methodSlug="migration"
-      title="Migration Method"
+      title="Delivery Method"
       heroImage={migrationMethodHero}
       icon={FolderKanban}
     />
