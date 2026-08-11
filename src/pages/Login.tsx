@@ -100,7 +100,7 @@ export default function Login() {
               <Users className="h-7 w-7 text-primary-foreground" />
             </div>
           </div>
-          <CardTitle className="text-2xl">Welcome to Community Hub</CardTitle>
+          <CardTitle className="text-2xl">Welcome to the eQ Info Hub</CardTitle>
           <CardDescription>Sign in to your account to continue</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
