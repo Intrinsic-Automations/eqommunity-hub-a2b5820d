@@ -66,6 +66,12 @@ serve(async (req) => {
         if (!linkUrl.pathname.startsWith("/auth/v1/")) {
           linkUrl.pathname = "/auth/v1/verify";
         }
+        // Kong's global key-auth plugin requires an apikey on every request,
+        // and a browser navigation can't set headers - pass it as a query param.
+        const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+        if (anonKey && !linkUrl.searchParams.has("apikey")) {
+          linkUrl.searchParams.set("apikey", anonKey);
+        }
         link = linkUrl.toString();
       } catch (_) {
         // leave link as-is if URL parsing fails
