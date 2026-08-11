@@ -60,6 +60,12 @@ serve(async (req) => {
         const pub = new URL(publicApiUrl);
         linkUrl.protocol = pub.protocol;
         linkUrl.host = pub.host;
+        // Kong only routes /auth/v1/*. If GoTrue built the link with a
+        // frontend path (e.g. /reset-password), move it to the verify endpoint
+        // so the token is actually exchanged before redirecting.
+        if (!linkUrl.pathname.startsWith("/auth/v1/")) {
+          linkUrl.pathname = "/auth/v1/verify";
+        }
         link = linkUrl.toString();
       } catch (_) {
         // leave link as-is if URL parsing fails
