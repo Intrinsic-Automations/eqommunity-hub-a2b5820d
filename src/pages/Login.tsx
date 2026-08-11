@@ -183,14 +183,12 @@ export default function Login() {
                 <span className="font-medium text-foreground">{forgotEmail}</span>. The link
                 expires in 1 hour.
               </p>
-              <a href={resetLink} className="block w-full">
-                <Button type="button" className="w-full" asChild>
-                  <span className="flex items-center justify-center gap-2">
-                    <ExternalLink className="h-4 w-4" />
-                    Open Reset Link
-                  </span>
-                </Button>
-              </a>
+              <Button type="button" asChild className="w-full">
+                <a href={resetLink} className="flex items-center justify-center gap-2">
+                  <ExternalLink className="h-4 w-4" />
+                  Open Reset Link
+                </a>
+              </Button>
               <Button
                 type="button"
                 variant="outline"
