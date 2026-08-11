@@ -170,29 +170,37 @@ export default function Login() {
             </div>
             <DialogTitle className="text-center text-2xl">Reset Password</DialogTitle>
             <DialogDescription className="text-center">
-              {forgotSent
-                ? "Check your inbox for the reset link"
-                : "Enter your email and we'll send you a reset link"}
+              {resetLink
+                ? "Your reset link is ready below"
+                : "Enter your email to generate a reset link"}
             </DialogDescription>
           </DialogHeader>
 
-          {forgotSent ? (
+          {resetLink ? (
             <div className="space-y-4 px-6 pb-6">
               <p className="text-sm text-muted-foreground text-center">
-                If an account exists for{" "}
-                <span className="font-medium text-foreground">{forgotEmail}</span>, a password
-                reset link is on its way. The link expires in 1 hour.
+                Click the link below to reset the password for{" "}
+                <span className="font-medium text-foreground">{forgotEmail}</span>. The link
+                expires in 1 hour.
               </p>
+              <a href={resetLink} className="block w-full">
+                <Button type="button" className="w-full" asChild>
+                  <span className="flex items-center justify-center gap-2">
+                    <ExternalLink className="h-4 w-4" />
+                    Open Reset Link
+                  </span>
+                </Button>
+              </a>
               <Button
                 type="button"
                 variant="outline"
                 className="w-full"
                 onClick={() => {
-                  setForgotSent(false);
+                  setResetLink(null);
                   setForgotEmail("");
                 }}
               >
-                Send to a different email
+                Use a different email
               </Button>
             </div>
           ) : (
