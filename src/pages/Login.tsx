@@ -14,7 +14,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Users, LogIn, Mail } from "lucide-react";
+import { Users, LogIn, Mail, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Login() {
@@ -29,7 +29,7 @@ export default function Login() {
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
-  const [forgotSent, setForgotSent] = useState(false);
+  const [resetLink, setResetLink] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,21 +58,27 @@ export default function Login() {
     e.preventDefault();
     setForgotLoading(true);
 
-    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
-      redirectTo: `${window.location.origin}/reset-password`,
+    const { data, error } = await supabase.functions.invoke("generate-recovery-link", {
+      body: { email: forgotEmail },
     });
 
-    if (error) {
+    if (error || data?.error) {
       toast({
         title: "Request failed",
-        description: error.message,
+        description: data?.error || error.message,
         variant: "destructive",
       });
-    } else {
-      setForgotSent(true);
+    } else if (data?.link) {
+      setResetLink(data.link);
       toast({
-        title: "Check your email",
-        description: "If an account exists for that address, a reset link has been sent.",
+        title: "Reset link ready",
+        description: "Click the link in the dialog to reset your password.",
+      });
+    } else {
+      toast({
+        title: "Request failed",
+        description: "Unable to generate a reset link.",
+        variant: "destructive",
       });
     }
 
@@ -80,7 +86,7 @@ export default function Login() {
   };
 
   const openForgot = () => {
-    setForgotSent(false);
+    setResetLink(null);
     setForgotEmail("");
     setForgotOpen(true);
   };
@@ -164,29 +170,35 @@ export default function Login() {
             </div>
             <DialogTitle className="text-center text-2xl">Reset Password</DialogTitle>
             <DialogDescription className="text-center">
-              {forgotSent
-                ? "Check your inbox for the reset link"
-                : "Enter your email and we'll send you a reset link"}
+              {resetLink
+                ? "Your reset link is ready below"
+                : "Enter your email to generate a reset link"}
             </DialogDescription>
           </DialogHeader>
 
-          {forgotSent ? (
+          {resetLink ? (
             <div className="space-y-4 px-6 pb-6">
               <p className="text-sm text-muted-foreground text-center">
-                If an account exists for{" "}
-                <span className="font-medium text-foreground">{forgotEmail}</span>, a password
-                reset link is on its way. The link expires in 1 hour.
+                Click the link below to reset the password for{" "}
+                <span className="font-medium text-foreground">{forgotEmail}</span>. The link
+                expires in 1 hour.
               </p>
+              <Button type="button" asChild className="w-full">
+                <a href={resetLink} className="flex items-center justify-center gap-2">
+                  <ExternalLink className="h-4 w-4" />
+                  Open Reset Link
+                </a>
+              </Button>
               <Button
                 type="button"
                 variant="outline"
                 className="w-full"
                 onClick={() => {
-                  setForgotSent(false);
+                  setResetLink(null);
                   setForgotEmail("");
                 }}
               >
-                Send to a different email
+                Use a different email
               </Button>
             </div>
           ) : (
