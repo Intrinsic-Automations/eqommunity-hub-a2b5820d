@@ -168,6 +168,7 @@ services:
       SUPABASE_URL: http://supabase-kong:8000
       SUPABASE_ANON_KEY: ${ANON_KEY}
       SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+      SITE_URL: ${SITE_URL}
       SUPABASE_DB_URL: postgres://postgres:${POSTGRES_PASSWORD}@supabase-db:5432/postgres
       VERIFY_JWT: "false"
     volumes:
