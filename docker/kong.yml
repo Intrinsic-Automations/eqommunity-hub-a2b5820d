@@ -32,6 +32,18 @@ services:
     plugins:
       - name: cors
 
+  - name: functions-v1
+    url: http://supabase-functions:9000/
+    routes:
+      - name: functions-v1-route
+        strip_path: true
+        paths:
+          - /functions/v1/
+    plugins:
+      - name: cors
+
+
+
 consumers:
   - username: anon
     keyauth_credentials:
