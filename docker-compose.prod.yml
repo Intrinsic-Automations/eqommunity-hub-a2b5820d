@@ -157,6 +157,28 @@ services:
       - app-network
     restart: unless-stopped
 
+  # Supabase Edge Functions (Deno edge-runtime)
+  # Serves everything under supabase/functions/. Used by the Forgot Password
+  # popup (generate-recovery-link) which mints a password recovery link with
+  # the service role key instead of sending an email.
+  supabase-functions:
+    image: supabase/edge-runtime:v1.58.2
+    command: ["start", "--main-service", "/home/deno/functions/main"]
+    environment:
+      SUPABASE_URL: http://supabase-kong:8000
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+      SUPABASE_DB_URL: postgres://postgres:${POSTGRES_PASSWORD}@supabase-db:5432/postgres
+      VERIFY_JWT: "false"
+    volumes:
+      - ./supabase/functions:/home/deno/functions:ro
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
   # Kong API Gateway
   supabase-kong:
     image: kong:2.8.1
@@ -174,6 +196,8 @@ services:
       - supabase-auth
       - supabase-rest
       - supabase-storage
+      - supabase-functions
+
     networks:
       - app-network
     restart: unless-stopped
